@@ -5,6 +5,7 @@
 5. Graceful shutdowns are very important. If we have a database transaction or something and we decide to shut the server down, if we don't do it gracefully, we can disconnect client not allowing to finish something they are doing and they will receive an error.
 6. http.Server.Shutdown() waits until the requests have been completed and shuts down. Shutdown receives context
 We can do it the following way:
+
     go func() {
 		err := s.ListenAndServe()
 		if err != nil {
@@ -19,3 +20,5 @@ We can do it the following way:
 
 	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	s.Shutdown(tc)
+7. Encoder could be better than marshal because we don't allocate memory for a possible very large json, cuz it encodes directly to writer, it is also faster and can be better for concurrent microservices
+8. 
