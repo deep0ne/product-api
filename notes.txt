@@ -1,0 +1,21 @@
+1. ServeMux is an object with methods Handle, HandleFunc etc. When a request comes to a server, a server has a default handler - http.ServeMux. Server gonna call ServeMux.ServeHTTP, special logic help to determine which handler to call
+2. ResponseWriter is an interface, that's why we don't need asteriks (*)
+3. Timeout is important cuz if a client connects to the client and pauses, it is a blocked connection. It can result in a lot of blocked connections. ]
+4. http.Server is a struct with several fields. IdleTimeout - max amount of time to wait for the next request when keep-alives are enabled.
+5. Graceful shutdowns are very important. If we have a database transaction or something and we decide to shut the server down, if we don't do it gracefully, we can disconnect client not allowing to finish something they are doing and they will receive an error.
+6. http.Server.Shutdown() waits until the requests have been completed and shuts down. Shutdown receives context
+We can do it the following way:
+    go func() {
+		err := s.ListenAndServe()
+		if err != nil {
+			l.Fatal(err)
+		}
+	}()
+    sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGTERM, os.Interrupt)
+
+	sig := <-sigchan
+	l.Println("Recieved terminate signal, graceful shutdown...", sig)
+
+	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	s.Shutdown(tc)
