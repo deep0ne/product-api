@@ -17,15 +17,17 @@ func NewProducts(l *log.Logger) *Products {
 	return &Products{l}
 }
 
-// func (p *Products) addProduct(w http.ResponseWriter, r *http.Request) {
-// 	prod := data.Product{}
-// 	err := prod.FromJSON(r.Body)
-// 	if err != nil {
-// 		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
-// 	}
-// 	p.l.Printf("Prod: %#v", prod)
-// 	data.AddProduct(&prod)
-// }
+func (p *Products) CreateProduct(ctx *gin.Context) {
+	prod := data.Product{}
+	err := prod.FromJSON(ctx.Request.Body)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, err)
+		return
+	}
+	p.l.Printf("Prod: %#v", prod)
+	data.AddProduct(&prod)
+	ctx.Status(http.StatusCreated)
+}
 
 func (p *Products) GetProducts(ctx *gin.Context) {
 	lp := data.GetProducts()
@@ -43,12 +45,14 @@ func (p *Products) UpdateProduct(ctx *gin.Context) {
 	err := prod.FromJSON(ctx.Request.Body)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, err)
+		return
 	}
 
 	err = data.UpdateProduct(id, &prod)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, err)
+		return
 	}
 
-	ctx.JSON(http.StatusOK, prod)
+	ctx.Status(http.StatusOK)
 }

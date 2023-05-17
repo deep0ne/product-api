@@ -21,6 +21,7 @@ func main() {
 
 	sm.GET("/products", ph.GetProducts)
 	sm.PUT("/products/:id", ph.UpdateProduct)
+	sm.POST("/products", ph.CreateProduct)
 
 	s := http.Server{
 		Addr:         ":9090",
