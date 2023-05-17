@@ -4,7 +4,9 @@ import (
 	"log"
 	"net/http"
 	"product-api/data"
-	"regexp"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Products struct {
@@ -15,41 +17,38 @@ func NewProducts(l *log.Logger) *Products {
 	return &Products{l}
 }
 
-func (p *Products) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		p.getProducts(w, r)
-		return
-	}
+// func (p *Products) addProduct(w http.ResponseWriter, r *http.Request) {
+// 	prod := data.Product{}
+// 	err := prod.FromJSON(r.Body)
+// 	if err != nil {
+// 		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
+// 	}
+// 	p.l.Printf("Prod: %#v", prod)
+// 	data.AddProduct(&prod)
+// }
 
-	if r.Method == http.MethodPost {
-		p.addProduct(w, r)
-		return
-	}
-
-	if r.Method == http.MethodPut {
-		r := regexp.MustCompile(`/([0-9]+)`)
-		// todo : findall
-
-		p := r.URL.Path
-	}
-
-	w.WriteHeader(http.StatusMethodNotAllowed)
-}
-
-func (p *Products) addProduct(w http.ResponseWriter, r *http.Request) {
-	prod := data.Product{}
-	err := prod.FromJSON(r.Body)
-	if err != nil {
-		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
-	}
-	p.l.Printf("Prod: %#v", prod)
-	data.AddProduct(&prod)
-}
-
-func (p *Products) getProducts(w http.ResponseWriter, r *http.Request) {
+func (p *Products) GetProducts(ctx *gin.Context) {
 	lp := data.GetProducts()
-	err := lp.ToJSON(w)
-	if err != nil {
-		http.Error(w, "Unnable to marshal JSON", http.StatusInternalServerError)
+	ctx.JSON(http.StatusOK, lp)
+}
+
+func (p *Products) UpdateProduct(ctx *gin.Context) {
+	id, _ := strconv.Atoi(ctx.Param("id"))
+	if err := ctx.ShouldBindUri(&id); err != nil {
+		ctx.JSON(http.StatusBadRequest, err)
+		return
 	}
+
+	prod := data.Product{}
+	err := prod.FromJSON(ctx.Request.Body)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, err)
+	}
+
+	err = data.UpdateProduct(id, &prod)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, err)
+	}
+
+	ctx.JSON(http.StatusOK, prod)
 }

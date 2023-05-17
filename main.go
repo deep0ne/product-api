@@ -9,14 +9,18 @@ import (
 	"product-api/handlers"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	l := log.New(os.Stdout, "product-api", log.LstdFlags)
 	ph := handlers.NewProducts(l)
 
-	sm := http.NewServeMux()
-	sm.Handle("/", ph)
+	sm := gin.Default()
+
+	sm.GET("/products", ph.GetProducts)
+	sm.PUT("/products/:id", ph.UpdateProduct)
 
 	s := http.Server{
 		Addr:         ":9090",

@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"time"
 )
@@ -38,13 +39,33 @@ func AddProduct(p *Product) {
 	productList = append(productList, p)
 }
 
+func UpdateProduct(id int, p *Product) error {
+	_, pos, err := FindProduct(id)
+	if err != nil {
+		return err
+	}
+
+	p.ID = id
+	productList[pos] = p
+	return nil
+}
+
+func FindProduct(id int) (*Product, int, error) {
+	for i, p := range productList {
+		if p.ID == id {
+			return p, i, nil
+		}
+	}
+	return nil, 0, errors.New("no product with that ID")
+}
+
 func getNextID() int {
 	lp := productList[len(productList)-1]
 	return lp.ID + 1
 }
 
 var productList = []*Product{
-	&Product{
+	{
 		ID:          1,
 		Name:        "Latte",
 		Description: "Milky coffee",
@@ -53,7 +74,7 @@ var productList = []*Product{
 		CreatedOn:   time.Now().UTC().String(),
 		UpdatedOn:   time.Now().UTC().String(),
 	},
-	&Product{
+	{
 		ID:          2,
 		Name:        "Espresso",
 		Description: "Strong coffee",
