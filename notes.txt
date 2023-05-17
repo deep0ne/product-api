@@ -21,4 +21,4 @@ We can do it the following way:
 	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	s.Shutdown(tc)
 7. Encoder could be better than marshal because we don't allocate memory for a possible very large json, cuz it encodes directly to writer, it is also faster and can be better for concurrent microservices
-8. 
+8. Middleware - just a handler, with it we can chain multiple handlers. Authentication is a very common case when we need to use middleware.

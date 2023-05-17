@@ -20,8 +20,11 @@ func main() {
 	sm := gin.Default()
 
 	sm.GET("/products", ph.GetProducts)
-	sm.PUT("/products/:id", ph.UpdateProduct)
-	sm.POST("/products", ph.CreateProduct)
+
+	changeRoutes := sm.Group("/products")
+	changeRoutes.Use(ph.MiddleWareProductValidations())
+	changeRoutes.PUT("/:id", ph.UpdateProduct)
+	changeRoutes.POST("", ph.CreateProduct)
 
 	s := http.Server{
 		Addr:         ":9090",
