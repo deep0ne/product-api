@@ -60,6 +60,14 @@ func GetProducts() Products {
 	return productList
 }
 
+func GetProduct(id int) (*Product, error) {
+	prod, _, err := FindProduct(id)
+	if err != nil {
+		return &Product{}, err
+	}
+	return prod, nil
+}
+
 func DeleteProduct(id int) error {
 	_, i, err := FindProduct(id)
 	if err != nil {

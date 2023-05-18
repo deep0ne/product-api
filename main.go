@@ -21,6 +21,7 @@ func main() {
 	sm := gin.Default()
 
 	sm.GET("/products", ph.GetProducts)
+	sm.GET("/products/:id", ph.GetProduct)
 	sm.DELETE("/products/:id", ph.DeleteProduct)
 
 	opts := middleware.RedocOpts{SpecURL: "./swagger.yaml"}
