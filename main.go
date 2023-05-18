@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 func main() {
@@ -20,6 +21,17 @@ func main() {
 	sm := gin.Default()
 
 	sm.GET("/products", ph.GetProducts)
+	sm.DELETE("/products/:id", ph.DeleteProduct)
+
+	opts := middleware.RedocOpts{SpecURL: "./swagger.yaml"}
+	sh := middleware.Redoc(opts, nil)
+
+	sm.GET("/docs", func(ctx *gin.Context) {
+		sh.ServeHTTP(ctx.Writer, ctx.Request)
+	})
+	sm.GET("/swagger.yaml", func(ctx *gin.Context) {
+		http.FileServer(http.Dir("./")).ServeHTTP(ctx.Writer, ctx.Request)
+	})
 
 	changeRoutes := sm.Group("/products")
 	changeRoutes.Use(ph.MiddleWareProductValidations())

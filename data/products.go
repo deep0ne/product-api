@@ -10,7 +10,13 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// Product defines the structure for an API product
+// swagger:model
 type Product struct {
+	// the id for this user
+	//
+	// required: true
+	// min: 1
 	ID          int     `json:"id"`
 	Name        string  `json:"name" validate:"required"`
 	Description string  `json:"description"`
@@ -52,6 +58,16 @@ func (p *Products) ToJSON(w io.Writer) error {
 
 func GetProducts() Products {
 	return productList
+}
+
+func DeleteProduct(id int) error {
+	_, i, err := FindProduct(id)
+	if err != nil {
+		return err
+	}
+	productList = append(productList[:i], productList[i+1:]...)
+
+	return nil
 }
 
 func AddProduct(p *Product) {
