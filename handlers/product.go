@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"product-api/data"
@@ -19,10 +20,14 @@ func NewProducts(l *log.Logger) *Products {
 }
 
 func (p *Products) CreateProduct(ctx *gin.Context) {
-	prod := ctx.Request.Context().Value(KeyProduct{}).(data.Product)
+	prod, ok := ctx.Request.Context().Value(KeyProduct{}).(data.Product)
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, errors.New("invalid data input"))
+		return
+	}
 	p.l.Printf("Prod: %#v", prod)
 	data.AddProduct(&prod)
-	ctx.Status(http.StatusCreated)
+	ctx.JSON(http.StatusCreated, "Product was created successfully")
 }
 
 func (p *Products) GetProducts(ctx *gin.Context) {
@@ -33,18 +38,18 @@ func (p *Products) GetProducts(ctx *gin.Context) {
 func (p *Products) UpdateProduct(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
 	if err := ctx.ShouldBindUri(&id); err != nil {
-		ctx.JSON(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	prod := ctx.Request.Context().Value(KeyProduct{}).(data.Product)
 	err := data.UpdateProduct(id, &prod)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, err)
+		ctx.JSON(http.StatusNotFound, errorResponse(err))
 		return
 	}
 
-	ctx.Status(http.StatusOK)
+	ctx.JSON(http.StatusOK, "Product was updated successfully")
 }
 
 type KeyProduct struct{}
@@ -54,12 +59,23 @@ func (p *Products) MiddleWareProductValidations() gin.HandlerFunc {
 		prod := data.Product{}
 		err := prod.FromJSON(c.Request.Body)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, err)
+			c.JSON(http.StatusBadRequest, errorResponse(err))
 			return
 		}
+
+		err = prod.Validate()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+
 		p.l.Println("Validation succeeded")
 		ctx := context.WithValue(c.Request.Context(), KeyProduct{}, prod)
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
+}
+
+func errorResponse(err error) gin.H {
+	return gin.H{"error": err.Error()}
 }
